@@ -1,0 +1,35 @@
+doctype html
+html
+  head
+    title Welcome, bitch!
+
+    meta(charset = "utf-8")
+    meta(name = "viewport" content = "width=device-width, initial-scale=1")
+
+    //Bootstrap
+    link(rel = "stylesheet" href = "https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/boostrap.min.css")
+    script(src = "https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js")
+
+    //jquery
+    script(src = "//ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js")
+  body
+    div.jumbotron
+      h1 Welcome to my super simple database!
+    div.row
+      div.container
+        a(href = "createDatabase") Create a database!
+        br
+        a(href = "createTable") Create a table!
+        br
+        a(href = "destroyTable") Drop the bass- er i mean tables!
+        br
+        a(href = "destroyDatabase") Destroy the whole database
+        br
+        a(href = "view") View information on the database and its tables!
+        br
+        a(href = "clearLog") Clear the log details
+      br
+      div.container
+        div.well-lg
+          div.output
+            p= details

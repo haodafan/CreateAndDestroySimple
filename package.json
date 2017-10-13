@@ -1,0 +1,21 @@
+{
+  "name": "CreateAndDestroySimple",
+  "version": "0.0.1",
+  "description": "A simple application that can create and destroy a MySQL database and table ",
+  "main": "server.js",
+  "scripts": {
+    "test": "node server.js"
+  },
+  "keywords": [
+    "practice"
+  ],
+  "author": "haodafan",
+  "license": "ISC",
+  "dependencies": {
+    "cfenv": "^1.0.4",
+    "express": "^4.16.2",
+    "fs": "0.0.1-security",
+    "mysql": "^2.15.0",
+    "pug": "^2.0.0-rc.4"
+  }
+}
