@@ -1,0 +1,8 @@
+---
+applications:
+  - name: CreateAndDestroySimpleHaoda
+    host: CreateAndDestroySimpleHaoda
+    random-route: true
+    memory: 128M
+    services:
+      - my-compose-for-mysql-service

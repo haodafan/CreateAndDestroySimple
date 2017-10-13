@@ -12,6 +12,7 @@
   "author": "haodafan",
   "license": "ISC",
   "dependencies": {
+    "cf-deployment-tracker-client": "^0.1.3",
     "cfenv": "^1.0.4",
     "express": "^4.16.2",
     "fs": "0.0.1-security",
