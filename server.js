@@ -74,12 +74,15 @@ function updatePageDetails(res) {
 }
 
 //Adds a section to the log file
-function addDetail(detail) {
+function addDetail(detail, res) {
   console.log("addDetail function has been invoked. ");
+  console.log("Detail added: " + detail);
   fs.appendFile('log.haodaisawesomefileextension', '\n' + detail, function(err, file) {
     if (err) throw err;
-    console.log("Log file is updated.")
+    console.log("Log file is updated.");
+    updatePageDetails(res);
   });
+
 }
 
 //Resets log file, then outputs a blank page
@@ -139,8 +142,10 @@ function deleteTable(res) {
 }
 //
 // //This will return true if the database exists, false if it does not.
-function getDatabase(res) {
+function getDatabase(res, callback) {
   console.log("The getDatabase() function has been invoked");
+  var boo;
+
   connection.query("SHOW DATABASES LIKE 'simple';", function(err, data) {
     if (err) {
       res.status(500).send(err); //(not res)
@@ -149,18 +154,22 @@ function getDatabase(res) {
     else {
       console.log(data);
       if (data === undefined || data === NULL || data === '') {
-        return false;
+        boo = false;
+        callback(boo);
       }
       else {
-        return true;
+         boo = true;
+         callback(boo);
       }
     }
   });
 }
 
 //This will return true if the table exists, false if it doesn't
-function getTable(res) {
+function getTable(res, callback) {
   console.log("The getTable() function has been invoked");
+  var boo;
+
   connection.query("SHOW DATABASES LIKE 'simple';", function(err, data) {
     if (err) {
       res.status(500).send(err); //(not res)
@@ -169,10 +178,12 @@ function getTable(res) {
     else {
       console.log(data);
       if (data === undefined || data === NULL || data === '') {
-        return false;
+        boo = false;
+        callback(boo);
       }
       else {
-        return true;
+        boo = true;
+        callback(boo);
       }
     }
   });
@@ -190,15 +201,15 @@ app.get('/', function(req, res) {
 app.get('/createDatabase', function(req, res) {
   console.log("routed from /createDatabase");
   createDatabase(res);
-  addDetail("Database 'simple' has been created. ");
-  updatePageDetails(res);
+  addDetail("Database 'simple' has been created. ", res);
+  //updatePageDetails(res);
 });
 
 app.get('/deleteDatabase', function(req, res) {
   console.log("routed from /deleteDatabase");
   createDatabase(res);
-  addDetail("Database 'simple' has been deleted. ");
-  updatePageDetails(res);
+  addDetail("Database 'simple' has been deleted. ", res);
+  //updatePageDetails(res);
 });
 
 /*
@@ -207,22 +218,37 @@ MISSING: ADD/DELETE TABLE
 
 app.get('/log', function(req, res) {
   console.log("routed from /log");
+  var existDatabase;
+  var existTable;
+
   var status = "";
-  if (getDatabase) {
-    status.append("You are currently running a database. \n");
+  getDatabase(res, function(boo) {
+    existDatabase = boo;
+  });
+  getTable(res, function(boo) {
+    existTable = boo;
+  })
+
+  if (existDatabase) {
+    console.log("DATABASE DETECTED");
+    status.concat("You are currently running a database. \n");
   }
-  else if (!getDatabase) {
-    status.append("You are not currently running a database. \n");
+  else if (!existDatabase) {
+    console.log("NO DATABASE DETECTED");
+    status.concat("You are not currently running a database. \n");
   }
 
-  if (getTable) {
-    status.append("You are currently running a table. \n");
+  if (existTable) {
+    console.log("TABLE DETECTED");
+    status.concat("You are currently running a table. \n");
   }
-  else if (!getTable) {
-    status.append("You are not currently running a table. \n");
+  else if (!existTable) {
+    console.log("NO TABLE DETECTED");
+    status.concat("You are not currently running a table. \n");
   }
-  addDetail(status); //Adds it to the log file
-  updatePageDetails(res);
+  console.log("Status variable: " + status);
+  addDetail(status, res); //Adds it to the log file
+  //updatePageDetails(res);
 });
 
 app.get("/clearLog", function (req, res) {
@@ -230,8 +256,8 @@ app.get("/clearLog", function (req, res) {
   fs.writeFile('log.haodaisawesomefileextension', "", function(err, file) {
     if (err) throw err;
     console.log("Log file is cleared.");
+    updatePageDetails(res);
   });
-  updatePageDetails(res);
 });
 // -----------------------------------------------------------------------------
 
