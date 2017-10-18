@@ -68,9 +68,8 @@ function updatePageDetails(res) {
     if (err) throw err;
     fileData = data;
     console.log("File read! ");
+    makePage(res, fileData);
   });
-
-  makePage(res, fileData);
 }
 
 //Adds a section to the log file
@@ -98,47 +97,60 @@ function resetLog(res) {
 //DATABASE functions -----------------------------------------------------------
 
 //makeQueryToSimple makes a query to the 'simple' database
-function makeQueryToSimple(query, res) {
+function makeQueryToSimple(query, res, callback) {
   console.log("The makeQueryToSimple() function has been EXTORT EXTORT EXTORT invoked. ");
-  connection.query(query, function(err, res) {
+  connection.query(query, function(err, data) {
+    console.log("Connection established!")
     if (err) {
       res.status(500).send(err); //(not res)
       console.log(err);
     }
     else {
-      console.log(res);
-      res.send(res);
+      console.log("No errors!")
+      console.log(data);
+      //res.send(data);
+      callback(data)
     }
   });
 }
 
 
 //Creates and uses a database
-function createDatabase(res) {
+function createDatabase(res, callback) {
   console.log("The createDatabase() function has been EXTORT EXTORT EXTORT invoked. ");
-  makeQueryToSimple("CREATE DATABASE simple;", res);
-  makeQueryToSimple("USE DATABASE simple;", res);
-  console.log("Database created. ");
+  makeQueryToSimple("CREATE DATABASE simple;", res, function(data) {
+    console.log("Database created.")
+    makeQueryToSimple("USE simple;", res, function(data) {
+      console.log("Database in use. ");
+      callback()
+    });
+  });
 }
 
 //Deletes the database
-function deleteDatabase(res) {
+function deleteDatabase(res, callback) {
   console.log("deleteDatabase function has been invoked. ");
-  makeQueryToSimple("DROP DATABASE simple;");
-  console.log("DataBASS DROP. ");
+  makeQueryToSimple("DROP DATABASE simple;", res, function(data) {
+    console.log("DataBASS DROP. ");
+    callback()
+  });
 }
 
 //creates a table
-function createTable(res) {
+function createTable(res, callback) {
   console.log("The createTable() function has been invoked. ");
-  makeQueryToSimple("CREATE TABLE person (id INTEGER AUTO_INCREMENT PRIMARY KEY, name VARCHAR(255), age INTEGER);", res);
-  console.log("Table created. ");
+  makeQueryToSimple("CREATE TABLE person (id INTEGER AUTO_INCREMENT PRIMARY KEY, name VARCHAR(255), age INTEGER);", res, function(data) {
+    console.log("Table created. ");
+    callback(res)
+  });
 }
 
-function deleteTable(res) {
+function deleteTable(res, callback) {
   console.log("The deleteTable() function has been invoked. ");
-  makeQueryToSimple("DROP TABLE person;", res);
-  console.log("Table annihilated. ");
+  makeQueryToSimple("DROP TABLE person;", res, function(data) {
+    console.log("Table annihilated. ");
+    callback(res)
+  });
 }
 //
 // //This will return true if the database exists, false if it does not.
@@ -146,20 +158,24 @@ function getDatabase(res, callback) {
   console.log("The getDatabase() function has been invoked");
   var boo;
 
-  connection.query("SHOW DATABASES LIKE 'simple';", function(err, data) {
+  connection.query("SHOW DATABASES LIKE '%imple%';", function(err, data) {
     if (err) {
       res.status(500).send(err); //(not res)
       console.log(err);
     }
     else {
+      console.log("connection queried!")
       console.log(data);
-      if (data === undefined || data === NULL || data === '') {
+      if (data === undefined || data === null || data === '') {
+        console.log("NO DATA.");
         boo = false;
         callback(boo);
       }
       else {
+        console.log("DATABASE");
          boo = true;
          callback(boo);
+        addDetail("Database here!");
       }
     }
   });
@@ -177,7 +193,7 @@ function getTable(res, callback) {
     }
     else {
       console.log(data);
-      if (data === undefined || data === NULL || data === '') {
+      if (data === undefined || data === null || data === '') {
         boo = false;
         callback(boo);
       }
@@ -192,23 +208,20 @@ function getTable(res, callback) {
 // -----------------------------------------------------------------------------
 
 //Routing ----------------------------------------------------------------------
-app.get('/', function(req, res) {
-  console.log("routed from '/'");
-  makePage(res, "");
-  //res.send("THIS WORKED.");
-});
 
 app.get('/createDatabase', function(req, res) {
   console.log("routed from /createDatabase");
-  createDatabase(res);
-  addDetail("Database 'simple' has been created. ", res);
+  createDatabase(res, function(res) {
+    addDetail("Database 'simple' has been created. ", res);
+  });
   //updatePageDetails(res);
 });
 
-app.get('/deleteDatabase', function(req, res) {
-  console.log("routed from /deleteDatabase");
-  createDatabase(res);
-  addDetail("Database 'simple' has been deleted. ", res);
+app.get('/destroyDatabase', function(req, res) {
+  console.log("routed from /destroyDatabase");
+  deleteDatabase(res, function(res) {
+    addDetail("Database 'simple' has been deleted. ", res);
+  });
   //updatePageDetails(res);
 });
 
@@ -221,30 +234,29 @@ app.get('/log', function(req, res) {
   var existDatabase;
   var existTable;
 
-  var status = "";
+  var status = "\n -- CURRENT DATABASE STATUS -- ";
   getDatabase(res, function(boo) {
     existDatabase = boo;
   });
   getTable(res, function(boo) {
     existTable = boo;
-  })
-
+  });
   if (existDatabase) {
     console.log("DATABASE DETECTED");
-    status.concat("You are currently running a database. \n");
+    status = status.concat("\n<br>You are currently running a database.");
   }
   else if (!existDatabase) {
     console.log("NO DATABASE DETECTED");
-    status.concat("You are not currently running a database. \n");
+    status = status.concat("\n<br>You are not currently running a database.");
   }
 
   if (existTable) {
     console.log("TABLE DETECTED");
-    status.concat("You are currently running a table. \n");
+    status = status.concat("\n<br>You are currently running a table.");
   }
   else if (!existTable) {
     console.log("NO TABLE DETECTED");
-    status.concat("You are not currently running a table. \n");
+    status = status.concat("\n<br>You are not currently running a table.");
   }
   console.log("Status variable: " + status);
   addDetail(status, res); //Adds it to the log file
@@ -259,6 +271,13 @@ app.get("/clearLog", function (req, res) {
     updatePageDetails(res);
   });
 });
+
+app.get('/', function(req, res) {
+  console.log("routed from '/'");
+  makePage(res, "");
+  //res.send("THIS WORKED.");
+});
+
 // -----------------------------------------------------------------------------
 
 //Let's start the app!
